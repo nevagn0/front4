@@ -1,0 +1,30 @@
+type Product {
+  id: ID!
+  name: String!
+  price: Float!
+  description: String
+  categories: [String!]!
+}
+
+type Query {
+  # Полные данные
+  products: [Product!]!
+  product(id: ID!): Product
+  
+  # Частичные данные по требованию
+  productNames: [String!]!
+  productPrices: [Float!]!
+  productNamesWithPrices: [ProductNamePrice!]!
+  productNamesWithDescriptions: [ProductNameDescription!]!
+  productsByCategory(category: String!): [Product!]!
+}
+
+type ProductNamePrice {
+  name: String!
+  price: Float!
+}
+
+type ProductNameDescription {
+  name: String!
+  description: String!
+}

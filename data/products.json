@@ -1,0 +1,45 @@
+[
+  {
+    "id": "2",
+    "name": "Wireless Headphones",
+    "price": 149.99,
+    "description": "Noise cancelling wireless headphones",
+    "categories": [
+      "Electronics"
+    ]
+  },
+  {
+    "id": "3",
+    "name": "Coffee Maker",
+    "price": 89.99,
+    "description": "Automatic coffee maker with timer",
+    "categories": [
+      "Home Appliances"
+    ]
+  },
+  {
+    "id": "4",
+    "name": "Running Shoes",
+    "price": 129.99,
+    "description": "Comfortable running shoes for all terrains",
+    "categories": [
+      "Sport"
+    ]
+  },
+  {
+    "id": "5",
+    "name": "Smart Watch",
+    "price": 199.99,
+    "description": "Track your fitness with this smart watch",
+    "categories": [
+      "Electronics",
+      "Sport"
+    ]
+  },
+  {
+    "name": "патап",
+    "price": 574,
+    "description": "аив",
+    "id": "6"
+  }
+]

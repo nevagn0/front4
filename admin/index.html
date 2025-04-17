@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Админ-панель</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Управление товарами</h1>
+  
+  <!-- Форма добавления/редактирования -->
+  <form id="product-form">
+    <input type="hidden" id="product-id">
+    <input type="text" id="product-name" placeholder="Название" required>
+    <input type="number" id="product-price" placeholder="Цена" required>
+    <textarea id="product-desc" placeholder="Описание"></textarea>
+    <button type="submit">Сохранить</button>
+  </form>
+
+  <!-- Список товаров -->
+  <div id="product-list"></div>
+
+  <!-- Чат поддержки -->
+  <div class="chat-container">
+    <div class="chat-header">Чат поддержки</div>
+    <div id="admin-chat" class="chat-messages"></div>
+    <div class="chat-input">
+      <input type="text" id="admin-message" placeholder="Ответ...">
+      <button id="admin-send">Отправить</button>
+    </div>
+  </div>
+
+  <script>
+    // Загрузка товаров
+    function loadProducts() {
+      fetch('http://localhost:8081/products')
+        .then(res => res.json())
+        .then(products => {
+          const container = document.getElementById('product-list');
+          container.innerHTML = '';
+          products.forEach(product => {
+            const item = document.createElement('div');
+            item.className = 'product-item';
+            item.innerHTML = `
+              <h3>${product.name}</h3>
+              <p>Цена: ₽${product.price}</p>
+              <p>${product.description || ''}</p>
+              <button onclick="editProduct('${product.id}')">Редактировать</button>
+              <button onclick="deleteProduct('${product.id}')">Удалить</button>
+            `;
+            container.appendChild(item);
+          });
+        })
+        .catch(error => console.error('Ошибка загрузки товаров:', error));
+    }
+
+    // Редактирование товара
+    function editProduct(id) {
+      fetch(`http://localhost:8081/products/${id}`)
+        .then(res => res.json())
+        .then(product => {
+          document.getElementById('product-id').value = product.id;
+          document.getElementById('product-name').value = product.name;
+          document.getElementById('product-price').value = product.price;
+          document.getElementById('product-desc').value = product.description || '';
+        });
+    }
+
+    // Удаление товара
+    function deleteProduct(id) {
+      if (confirm('Вы уверены, что хотите удалить этот товар?')) {
+        fetch(`http://localhost:8081/products/${id}`, {
+          method: 'DELETE'
+        })
+        .then(() => loadProducts())
+        .catch(error => console.error('Ошибка удаления:', error));
+      }
+    }
+
+    // Обработка формы
+    document.getElementById('product-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const productId = document.getElementById('product-id').value;
+      const productData = {
+        name: document.getElementById('product-name').value,
+        price: Number(document.getElementById('product-price').value),
+        description: document.getElementById('product-desc').value
+      };
+
+      const method = productId ? 'PUT' : 'POST';
+      const url = productId 
+        ? `http://localhost:8081/products/${productId}`
+        : 'http://localhost:8081/products';
+
+      fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(productData)
+      })
+      .then(() => {
+        loadProducts();
+        document.getElementById('product-form').reset();
+        document.getElementById('product-id').value = '';
+      })
+      .catch(error => console.error('Ошибка сохранения:', error));
+    });
+
+    // WebSocket чат
+    const ws = new WebSocket('ws://localhost:8081');
+    
+    ws.onmessage = (event) => {
+      const msg = JSON.parse(event.data);
+      if (msg.sender === 'customer') {
+        const chat = document.getElementById('admin-chat');
+        chat.innerHTML += `<div class="message customer">Клиент: ${msg.text}</div>`;
+        chat.scrollTop = chat.scrollHeight;
+      }
+    };
+
+    document.getElementById('admin-send').addEventListener('click', () => {
+      const input = document.getElementById('admin-message');
+      const text = input.value.trim();
+      if (text) {
+        ws.send(JSON.stringify({ 
+          sender: 'admin',
+          text: text
+        }));
+        const chat = document.getElementById('admin-chat');
+        chat.innerHTML += `<div class="message admin">Админ: ${text}</div>`;
+        chat.scrollTop = chat.scrollHeight;
+        input.value = '';
+      }
+    });
+
+    // Загрузка товаров при старте
+    loadProducts();
+  </script>
+</body>
+</html>

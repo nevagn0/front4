@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Каталог товаров</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Наши товары</h1>
+  
+  <div id="products" class="products-container"></div>
+
+  <!-- Чат поддержки -->
+  <div class="chat-container">
+    <div class="chat-header">Чат поддержки</div>
+    <div id="chat-messages" class="chat-messages"></div>
+    <div class="chat-input">
+      <input type="text" id="message-input" placeholder="Ваш вопрос...">
+      <button id="send-button">Отправить</button>
+    </div>
+  </div>
+
+  <script>
+    // Загрузка товаров
+    fetch('http://localhost:3001/products')
+      .then(res => res.json())
+      .then(products => {
+        const container = document.getElementById('products');
+        products.forEach(product => {
+          const card = document.createElement('div');
+          card.className = 'product-card';
+          card.innerHTML = `
+            <h3>${product.name}</h3>
+            <p class="price">${product.price} ₽</p>
+            <p>${product.description}</p>
+          `;
+          container.appendChild(card);
+        });
+      });
+
+    // WebSocket чат
+    const ws = new WebSocket('ws://localhost:8081');
+    
+    ws.onmessage = (event) => {
+      const msg = JSON.parse(event.data);
+      const chat = document.getElementById('chat-messages');
+      chat.innerHTML += `<div class="message ${msg.sender}">${msg.text}</div>`;
+      chat.scrollTop = chat.scrollHeight;
+    };
+
+    document.getElementById('send-button').addEventListener('click', () => {
+      const input = document.getElementById('message-input');
+      const text = input.value.trim();
+      if (text) {
+        ws.send(JSON.stringify({ 
+          sender: 'customer',
+          text: text
+        }));
+        input.value = '';
+      }
+    });
+  </script>
+</body>
+</html>
